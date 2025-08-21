@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Q6Fold Quantum Chat Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    body {
+      font-family: "Roboto Mono", monospace;
+      background: linear-gradient(135deg, #0a0e1a, #1a1f2e);
+      color: #e0e7ff;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .game-section {
+      background: linear-gradient(0deg, rgba(15, 20, 35, 0.95), rgba(20, 25, 40, 0.95));
+      border: 1px solid #00ffcc;
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 25px;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.3), 0 0 5px rgba(138, 43, 226, 0.2) inset;
+    }
+
+    .game-section:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 25px rgba(0, 255, 204, 0.6), 0 0 10px rgba(138, 43, 226, 0.4) inset;
+    }
+
+    .svg-container {
+      border: 2px dashed #00ffcc;
+      border-radius: 15px;
+      background: rgba(20, 25, 40, 0.9);
+      margin: 20px 0;
+      overflow: hidden;
+      height: 550px;
+      box-shadow: inset 0 0 10px #00ffcc;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .btns {
+      padding: 15px 30px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(45deg, #8a2bea, #00ffcc);
+      color: #fff;
+      font-family: "Orbitron", sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+    }
+
+    .btns:hover {
+      background: linear-gradient(45deg, #6b18b4, #00cc99);
+      transform: scale(1.05) translateY(-2px);
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.8);
+    }
+
+    .btns:disabled {
+      background: #444;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .description {
+      color: #b0c4de;
+      line-height: 1.7;
+      margin-top: 15px;
+      padding: 15px;
+      background: rgba(30, 35, 50, 0.8);
+      border-radius: 10px;
+      font-size: 15px;
+      border-left: 4px solid #00ffcc;
+    }
+
+    .glow {
+      animation: glow 1.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from {
+        box-shadow: 0 0 5px #00ffcc;
+      }
+
+      to {
+        box-shadow: 0 0 20px #00ffcc, 0 0 30px #8a2bea;
+      }
+    }
+
+    .float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-15px);
+      }
+    }
+
+    .chat-box {
+      border: 2px solid #00ffcc;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+      background: rgba(20, 25, 40, 0.9);
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+    }
+
+    .stolen {
+      background-color: #ff4040;
+      color: #fff;
+      animation: flash 1s infinite;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+
+    @keyframes flash {
+      50% {
+        background-color: #cc0000;
+      }
+    }
+
+    .character {
+      font-size: 16px;
+      text-anchor: middle;
+      fill: #00ffcc;
+      font-weight: bold;
+    }
+
+    .mode-selection {
+      margin-bottom: 25px;
+      text-align: center;
+    }
+
+    select {
+      padding: 10px;
+      border-radius: 10px;
+      border: 2px solid #00ffcc;
+      background: rgba(20, 25, 40, 0.9);
+      color: #e0e7ff;
+      font-family: "Orbitron", sans-serif;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    select:hover {
+      border-color: #8a2bea;
+    }
+
+    h1 {
+      font-family: "Orbitron", sans-serif;
+      color: #00ffcc;
+      text-shadow: 0 0 10px #00ffcc, 0 0 20px #8a2bea;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    h2 {
+      font-family: "Orbitron", sans-serif;
+      color: #8a2bea;
+      text-shadow: 0 0 5px #8a2bea;
+    }
+
+    input {
+      margin-top: 10px;
+      padding: 12px;
+      border: 2px solid #00ffcc;
+      border-radius: 10px;
+      background: rgba(20, 25, 40, 0.9);
+      color: #e0e7ff;
+      font-family: "Roboto Mono", monospace;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    input:focus {
+      border-color: #8a2bea;
+      outline: none;
+      box-shadow: 0 0 10px #8a2bea;
+    }
+
+    #confirmation-modal {
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+      display: none;
+    }
+
+    #confirmation-modal.show {
+      opacity: 1;
+      display: flex;
+    }
+
+    #confirmation-modal .modal-content {
+      transform: scale(0.9);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    #confirmation-modal.show .modal-content {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+
+      .game-section {
+        padding: 15px;
+      }
+
+      .btns {
+        padding: 12px 25px;
+        font-size: 14px;
+      }
+
+      .svg-container {
+        height: 400px;
+      }
+
+      #confirmation-modal .modal-content {
+        width: 90%;
+        max-width: 350px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="text-4xl font-bold text-center mb-6">Q6Fold Quantum Chat Simulator</h1>
+    <p class="text-center text-lg mb-6">Explore quantum cryptography with Alice, Bob, and Eve by Q6Fold!</p>
+
+    <div class="mode-selection">
+      <label for="user-mode" class="text-lg font-semibold mr-2">Select Your Mode:</label>
+      <select id="user-mode">
+        <option value="beginner">Extreme Beginners (Fun & Simple)</option>
+        <option value="knowledgeable" selected>Knowledgeable Users (Detailed & Technical)</option>
+      </select>
+    </div>
+
+    <div class="game-section">
+      <h2 class="text-2xl font-semibold mb-4">Welcome to Q6Fold Challenge</h2>
+      <p class="description" id="welcome-text"></p>
+      <div class="flex flex-col md:flex-row gap-4 items-center">
+        <input id="message-input" type="text" placeholder="Type your message (e.g., HELLO)" value="HELLO" />
+        <div class="button-group">
+          <button class="btns" id="normal-chat-btn">Try Regular Chat</button>
+          <button class="btns" id="quantum-chat-btn">Try Quantum Chat</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="result-section" class="game-section hidden">
+      <h2 class="text-2xl font-semibold mb-4">Q6Fold Quantum Process Visualization</h2>
+      <div class="svg-container">
+        <svg id="quantum-animation" width="100%" height="550"></svg>
+      </div>
+      <div id="chat-result" class="chat-box"></div>
+      <div id="step-explanation" class="description text-center font-bold"></div>
+      <div id="step-description" class="description"></div>
+      <div class="button-group">
+        <button class="btns" id="prev-step" disabled>Back</button>
+        <button class="btns" id="next-step">Next</button>
+        <button class="btns" id="try-again-btn">Try Again</button>
+        <button class="btns" id="encryption-details-btn" disabled>Show Encryption Details</button>
+      </div>
+    </div>
+
+    <div id="conclusion-section" class="game-section hidden">
+      <h2 class="text-2xl font-semibold mb-4">Q6Fold Quantum Score</h2>
+      <p id="score-text" class="description"></p>
+      <p id="conclusion-text" class="description"></p>
+    </div>
+  </div>
+
+  <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div
+      class="modal-content bg-gradient-to-br from-[#0a0e1a] to-[#1a1f2e] border-2 border-[#00ffcc] rounded-lg p-6 w-11/12 max-width-md text-center shadow-lg">
+      <h3 class="text-2xl font-orbitron text-[#00ffcc] mb-4">Quantum Encryption Details</h3>
+      <p class="text-[#b0c4de] mb-6">View the encryption/decryption process for '<span id="modal-message"
+          class="text-[#8a2bea]"></span>' with the quantum key?</p>
+      <div class="flex justify-center gap-4">
+        <button id="confirm-btn"
+          class="px-6 py-2 bg-gradient-to-r from-[#8a2bea] to-[#00ffcc] text-white rounded-lg font-orbitron hover:bg-gradient-to-r hover:from-[#6b18b4] hover:to-[#00cc99] transition-all duration-300 glow">Yes</button>
+        <button id="cancel-btn"
+          class="px-6 py-2 bg-[#444] text-white rounded-lg font-orbitron hover:bg-[#333] transition-all duration-300">No</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const svg = d3.select("#quantum-animation");
+    let userMode = "knowledgeable";
+    let mode = "";
+    let message = "HELLO";
+    let binaryMessage = "";
+    let huffmanDict = {};
+    let encodedMessage = "";
+    let sharedKey = "11"; // 2-bit key
+    let encryptedMessage = "";
+    let decryptedMessage = "";
+    // let qubitPositions = Array(4).fill().map(() => ({ x: 150, y: 300 })); // 4 qubits
+    let step = 0;
+    let score = 0;
+
+    let qubitPositions = [
+      { x: 150, y: 150 },
+      { x: 150, y: 210 },
+      { x: 150, y: 270 },
+      { x: 150, y: 330 }
+    ];
+    function getQubitPositionsForStep(step) {
+      return qubitPositions.map(pos => ({ x: pos.x + 50 * step, y: pos.y })); // Example adjustment
+    }
+    // Utility Functions
+    function stringToBinary(str) {
+      return str.split("").map(char => char.charCodeAt(0).toString(2).padStart(8, "0")).join("");
+    }
+
+    function huffmanEncode(binary) {
+      const dict = { "11": "1", "00": "0" };
+      let encoded = "";
+      for (let i = 0; i < binary.length; i += 2) {
+        const pair = binary.slice(i, i + 2);
+        encoded += dict[pair] || pair;
+      }
+      return { encoded, dict };
+    }
+
+    function huffmanDecode(encoded, dict) {
+      const reverseDict = Object.fromEntries(Object.entries(dict).map(([k, v]) => [v, k]));
+      let decoded = "";
+      for (let i = 0; i < encoded.length; i++) {
+        decoded += reverseDict[encoded[i]] || encoded[i];
+      }
+      return decoded;
+    }
+
+    function getQubitPositionsForStep(step) {
+      const positions = [];
+      const startX = 150; // Alice
+      const endX = 650; // Bob
+      const stepCount = 15; // 15 steps
+      const xIncrement = (endX - startX) / (stepCount - 1);
+      for (let i = 0; i < 4; i++) {
+        const baseX = startX + step * xIncrement;
+        const yOffset = Math.sin(step + i) * 20;
+        positions.push({ x: baseX + i * 50, y: 300 + yOffset }); // Increased spacing to 50px
+      }
+      return positions;
+    }
+
+    function drawCharacters() {
+      svg.append("circle").attr("cx", 100).attr("cy", 450).attr("r", 30).attr("fill", "#8a2bea").attr("class", "glow");
+      svg.append("text").attr("x", 100).attr("y", 455).attr("class", "character").text("Alice");
+      svg.append("circle").attr("cx", 700).attr("cy", 450).attr("r", 30).attr("fill", "#090909").attr("class", "glow");
+      svg.append("text").attr("x", 700).attr("y", 455).attr("class", "character").text("Bob");
+    }
+
+    const beginnerSteps = {
+      normal: [
+        {
+          text: "Step 1: Alice Sends Message",
+          action: (svg) => {
+            drawCharacters();
+            svg.append("text").attr("x", "50%").attr("y", 100).attr("text-anchor", "middle").style("fill", "#00ffcc").text(`Message: ${message}`).attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+          },
+          description: "Alice sends her message openly!"
+        },
+        {
+          text: "Step 2: Eve Steals It",
+          action: (svg) => {
+            drawCharacters();
+            const eve = svg.append("circle").attr("cx", 400).attr("cy", -50).attr("r", 30).attr("fill", "#ff4040").transition().duration(1000).attr("cy", 200).attr("class", "glow");
+            svg.append("text").attr("x", 400).attr("y", 205).attr("class", "character").text("Eve");
+            svg.append("text").attr("x", "50%").attr("y", 100).attr("text-anchor", "middle").style("fill", "#ff4040").text(`Eve reads: ${message}`).attr("opacity", 0).transition().delay(1000).duration(1000).attr("opacity", 1);
+            document.getElementById("chat-result").innerHTML = `<p class="stolen">Eve stole: ${message}</p>`;
+          },
+          description: "Eve grabs the message easily!"
+        },
+        {
+          text: "Step 3: Conclusion",
+          action: (svg) => {
+            drawCharacters();
+            svg.append("text").attr("x", "50%").attr("y", 100).attr("text-anchor", "middle").style("fill", "#ff4040").text("Message Stolen!").attr("opacity", 0).transition().duration(1000).attr("opacity", 1).transition().duration(1000).attr("font-size", "24px").transition().duration(1000).attr("font-size", "20px");
+          },
+          description: "Regular chat isn’t safe!"
+        }
+      ],
+      quantum: [
+        {
+          text: "Step 1: Alice Prepares Magic",
+          action: (svg) => {
+            drawCharacters();
+            svg.append("text").attr("x", "50%").attr("y", 100).attr("text-anchor", "middle").style("fill", "#8a2bea").text(`Message: ${message}`).attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            svg.append("circle").attr("cx", 100).attr("cy", 150).attr("r", 0).attr("fill", "#ff4500").transition().duration(1000).attr("r", 15).attr("class", "glow");
+          },
+          description: "Alice uses quantum magic!"
+        },
+        {
+          text: "Step 2: Safe Delivery",
+          action: (svg) => {
+            drawCharacters();
+            svg.append("circle").attr("cx", 100).attr("cy", 150).attr("r", 15).attr("fill", "#ff4500").attr("class", "glow").transition().duration(1500).attr("cx", 700);
+            svg.append("text").attr("x", "50%").attr("y", 100).attr("text-anchor", "middle").style("fill", "#00ff99").text(`Bob reads: ${message}`).attr("opacity", 0).transition().delay(1500).duration(1000).attr("opacity", 1);
+            document.getElementById("chat-result").innerHTML = `<p>Safe message: ${message}</p>`;
+          },
+          description: "Bob gets it safely!"
+        },
+        {
+          text: "Step 3: Conclusion",
+          action: (svg) => {
+            drawCharacters();
+            svg.append("text").attr("x", "50%").attr("y", 100).attr("text-anchor", "middle").style("fill", "#00ff99").text("Message Secure!").attr("opacity", 0).transition().duration(1000).attr("opacity", 1).transition().duration(1000).attr("font-size", "24px").transition().duration(1000).attr("font-size", "20px");
+          },
+          description: "Quantum magic wins!"
+        }
+      ]
+    };
+
+    const knowledgeableSteps = {
+      normal: [
+        {
+          text: "Step 1: Alice Sends Plaintext",
+          action: (svg) => {
+            drawCharacters();
+            svg.append("text").attr("x", "50%").attr("y", 100).attr("text-anchor", "middle").style("fill", "#00ffcc").text(`Plaintext: ${message}`).attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+          },
+          description: "Alice sends an unencrypted message."
+        },
+        {
+          text: "Step 2: Eve Intercepts",
+          action: (svg) => {
+            drawCharacters();
+            const eve = svg.append("circle").attr("cx", 400).attr("cy", -50).attr("r", 30).attr("fill", "#ff4040").transition().duration(1000).attr("cy", 200).attr("class", "glow");
+            svg.append("text").attr("x", 400).attr("y", 205).attr("class", "character").text("Eve");
+            svg.append("text").attr("x", "50%").attr("y", 100).attr("text-anchor", "middle").style("fill", "#ff4040").text(`Eve reads: ${message}`).attr("opacity", 0).transition().delay(1000).duration(1000).attr("opacity", 1);
+            document.getElementById("chat-result").innerHTML = `<p class="stolen">Eve stole: ${message}</p>`;
+          },
+          description: "Eve intercepts the unprotected message."
+        },
+        {
+          text: "Step 3: Conclusion",
+          action: (svg) => {
+            drawCharacters();
+            svg.append("text").attr("x", "50%").attr("y", 100).attr("text-anchor", "middle").style("fill", "#ff4040").text("Message Compromised!").attr("opacity", 0).transition().duration(1000).attr("opacity", 1).transition().duration(1000).attr("font-size", "24px").transition().duration(1000).attr("font-size", "20px");
+          },
+          description: "No encryption means no security."
+        }
+      ],
+      quantum: [
+        {
+          text: "Step 1: Alice Prepares Message",
+          action: (svg) => {
+            drawCharacters();
+            binaryMessage = stringToBinary(message).slice(0, 4); // e.g., "1100"
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#8a2bea").text(`Message: ${message}`).attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            svg.append("text").attr("x", "50%").attr("y", 110).attr("text-anchor", "middle").style("fill", "#00ffcc").text(`Binary: ${binaryMessage}`).attr("opacity", 0).transition().delay(1000).duration(1000).attr("opacity", 1);
+          },
+          description: "Alice converts message to binary (first 4 bits shown)."
+        },
+        {
+          text: "Step 2: Huffman Encoding",
+          action: (svg) => {
+            drawCharacters();
+            const { encoded, dict } = huffmanEncode(binaryMessage); // "1100" -> "10"
+            encodedMessage = encoded;
+            huffmanDict = dict;
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#ff4500").text(`Huffman Encoded: ${encodedMessage}`).attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            svg.append("text").attr("x", "50%").attr("y", 110).attr("text-anchor", "middle").style("fill", "#ffcc00").text(`Huffman Dictionary: ${JSON.stringify(huffmanDict)}`).attr("opacity", 0).transition().delay(1000).duration(1000).attr("opacity", 1);
+          },
+          description: "Huffman compresses binary message."
+        },
+        {
+          text: "Step 3: Qubit Initialization",
+          action: (svg) => {
+            drawCharacters();
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#8a2bea").text(`Shared Key: ${sharedKey}`).attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            svg.append("text").attr("x", "50%").attr("y", 110).attr("text-anchor", "middle").style("fill", "#00ffcc").text(`Huffman Encoded: ${encodedMessage}`).attr("opacity", 0).transition().delay(1000).duration(1000).attr("opacity", 1);
+            for (let i = 0; i < 4; i++) {
+              const value = i % 2 === 0 ? sharedKey[i / 2] : encodedMessage[(i - 1) / 2];
+              svg.append("circle").attr("cx", qubitPositions[i].x).attr("cy", qubitPositions[i].y).attr("r", 20).attr("fill", value === "1" ? "#ff4500" : "#00cc99").attr("class", "float");
+              svg.append("text").attr("x", qubitPositions[i].x).attr("y", qubitPositions[i].y + 5).attr("text-anchor", "middle").style("fill", "#fff").text(`q${i}`);
+            }
+          },
+          description: "Qubits initialized with key and encoded message."
+        },
+        {
+          text: "Step 4: Apply Hadamard Gates",
+          action: (svg) => {
+            drawCharacters();
+            const newPositions = getQubitPositionsForStep(step);
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#ffcc00").text("Hadamard Gates").attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            for (let i = 0; i < 4; i++) {
+              const value = i % 2 === 0 ? sharedKey[i / 2] : encodedMessage[(i - 1) / 2];
+              const qubit = svg.append("circle").attr("cx", qubitPositions[i].x).attr("cy", qubitPositions[i].y).attr("r", 20).attr("fill", value === "1" ? "#ff4500" : "#00cc99").attr("class", "float").transition().duration(1000).attr("cx", newPositions[i].x).attr("cy", newPositions[i].y).attr("fill", "#ff9900");
+              svg.append("text").attr("x", newPositions[i].x).attr("y", newPositions[i].y + 5).attr("text-anchor", "middle").style("fill", "#fff").text(`q${i}`);
+              qubitPositions[i] = newPositions[i];
+            }
+          },
+          description: "H gates create superposition."
+        },
+        {
+          text: "Step 5: Apply CNOT Gates",
+          action: (svg) => {
+            drawCharacters();
+            const newPositions = getQubitPositionsForStep(step);
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#ff4500").text("CNOT Gates").attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            for (let i = 0; i < 4; i += 2) {
+              svg.append("line").attr("x1", qubitPositions[i].x).attr("y1", qubitPositions[i].y).attr("x2", qubitPositions[i + 1].x).attr("y2", qubitPositions[i + 1].y).attr("stroke", "#ff4500").attr("stroke-width", 2).transition().duration(1000).attr("x1", newPositions[i].x).attr("y1", newPositions[i].y).attr("x2", newPositions[i + 1].x).attr("y2", newPositions[i + 1].y);
+            }
+            for (let i = 0; i < 4; i++) {
+              const qubit = svg.append("circle").attr("cx", qubitPositions[i].x).attr("cy", qubitPositions[i].y).attr("r", 20).attr("fill", "#ff9900").attr("class", "float").transition().duration(1000).attr("cx", newPositions[i].x).attr("cy", newPositions[i].y);
+              svg.append("text").attr("x", newPositions[i].x).attr("y", newPositions[i].y + 5).attr("text-anchor", "middle").style("fill", "#fff").text(`q${i}`);
+              qubitPositions[i] = newPositions[i];
+            }
+          },
+          description: "CNOT gates entangle control and target qubits."
+        },
+        {
+          text: "Step 6: Apply P(π/4) Gates",
+          action: (svg) => {
+            drawCharacters();
+            const newPositions = getQubitPositionsForStep(step);
+
+            // Add phase shift label
+            svg.append("text")
+              .attr("x", "50%")
+              .attr("y", 80)
+              .attr("text-anchor", "middle")
+              .style("fill", "#00cc99")
+              .text("P(π/4) Gates")
+              .attr("opacity", 0)
+              .transition()
+              .duration(1000)
+              .attr("opacity", 1);
+
+            // Animate each qubit with a phase shift effect
+            for (let i = 0; i < 4; i++) {
+              // Initial qubit circle
+              const qubit = svg.append("circle")
+                .attr("cx", qubitPositions[i].x)
+                .attr("cy", qubitPositions[i].y)
+                .attr("r", 20)
+                .attr("fill", "#ff6600") // Starting color (unshifted state)
+                .attr("class", "float");
+
+              // Simulate phase shift with color pulse and position oscillation
+              qubit.transition()
+                .duration(500)
+                .attr("fill", "#00cc99") // Phase shift color
+                .transition()
+                .duration(500)
+                .attr("fill", "#ff6600")
+                .attr("cx", newPositions[i].x + 10 * Math.sin(Date.now() / 100)) // Slight oscillation
+                .attr("cy", newPositions[i].y + 5 * Math.cos(Date.now() / 100))
+                .transition()
+                .duration(500)
+                .attr("fill", "#00cc99")
+                .attr("cx", newPositions[i].x)
+                .attr("cy", newPositions[i].y)
+                .on("end", () => {
+                  // Finalize position and state
+                  qubit.attr("fill", "#00cc99");
+                  qubitPositions[i] = newPositions[i];
+                });
+
+              // Add qubit label
+              svg.append("text")
+                .attr("x", newPositions[i].x)
+                .attr("y", newPositions[i].y + 5)
+                .attr("text-anchor", "middle")
+                .style("fill", "#fff")
+                .text(`q${i}`);
+            }
+
+            // Optional: Add a visual cue for phase shift (e.g., a pulse effect)
+            for (let i = 0; i < 4; i++) {
+              svg.append("circle")
+                .attr("cx", newPositions[i].x)
+                .attr("cy", newPositions[i].y)
+                .attr("r", 0)
+                .attr("fill", "none")
+                .attr("stroke", "#00cc99")
+                .attr("stroke-width", 2)
+                .transition()
+                .duration(1000)
+                .attr("r", 25)
+                .attr("opacity", 0.5)
+                .transition()
+                .duration(500)
+                .attr("r", 0)
+                .attr("opacity", 0);
+            }
+          },
+          description: "P(π/4) gates apply a π/4 phase rotation to each qubit, shifting its state on the Bloch sphere without altering its amplitude. This is implemented using Qiskit’s <code>circuit.p(pi/4, [0,1,2,3])</code> on IBM’s quantum hardware, enhancing encryption security."
+        }, {
+          text: "Step 7: Apply X Gates",
+          action: (svg) => {
+            drawCharacters();
+            const newPositions = getQubitPositionsForStep(step);
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#ff6600").text("X Gates").attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            for (let i = 0; i < 4; i++) {
+              const qubit = svg.append("circle").attr("cx", qubitPositions[i].x).attr("cy", qubitPositions[i].y).attr("r", 20).attr("fill", "#ff9900").attr("class", "float").transition().duration(1000).attr("cx", newPositions[i].x).attr("cy", newPositions[i].y).attr("fill", "#ff6600");
+              svg.append("text").attr("x", newPositions[i].x).attr("y", newPositions[i].y + 5).attr("text-anchor", "middle").style("fill", "#fff").text(`q${i}`);
+              qubitPositions[i] = newPositions[i];
+            }
+          },
+          description: "X gates flip target qubits."
+        },
+        {
+          text: "Step 8: Apply Y Gates",
+          action: (svg) => {
+            drawCharacters();
+            const newPositions = getQubitPositionsForStep(step);
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#ff9900").text("Y Gates").attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            for (let i = 0; i < 4; i++) {
+              const qubit = svg.append("circle").attr("cx", qubitPositions[i].x).attr("cy", qubitPositions[i].y).attr("r", 20).attr("fill", "#00cc99").attr("class", "float").transition().duration(1000).attr("cx", newPositions[i].x).attr("cy", newPositions[i].y).attr("fill", "#ff9900");
+              svg.append("text").attr("x", newPositions[i].x).attr("y", newPositions[i].y + 5).attr("text-anchor", "middle").style("fill", "#fff").text(`q${i}`);
+              qubitPositions[i] = newPositions[i];
+            }
+          },
+          description: "Y gates rotate target qubits."
+        },
+        {
+          text: "Step 9: Apply Final Z Gates",
+          action: (svg) => {
+            drawCharacters();
+            const newPositions = getQubitPositionsForStep(step);
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#ff4500").text("Z Gates").attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            for (let i = 0; i < 4; i++) {
+              const qubit = svg.append("circle").attr("cx", qubitPositions[i].x).attr("cy", qubitPositions[i].y).attr("r", 20).attr("fill", "#ff9900").attr("class", "float").transition().duration(1000).attr("cx", newPositions[i].x).attr("cy", newPositions[i].y).attr("fill", "#ff4500");
+              svg.append("text").attr("x", newPositions[i].x).attr("y", newPositions[i].y + 5).attr("text-anchor", "middle").style("fill", "#fff").text(`q${i}`);
+              qubitPositions[i] = newPositions[i];
+            }
+          },
+          description: "Final Z gates prepare for measurement."
+        },
+        {
+          text: "Step 10: Measurement",
+          action: (svg) => {
+            drawCharacters();
+            const newPositions = getQubitPositionsForStep(step);
+            encryptedMessage = "01"; // Simulated measurement
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#00ffcc").text(`Encrypted: ${encryptedMessage}`).attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            for (let i = 0; i < 4; i++) {
+              const value = i % 2 === 0 ? sharedKey[i / 2] : encryptedMessage[(i - 1) / 2];
+              const qubit = svg.append("circle").attr("cx", qubitPositions[i].x).attr("cy", qubitPositions[i].y).attr("r", 20).attr("fill", "#ff4500").attr("class", "float").transition().duration(1000).attr("cx", newPositions[i].x).attr("cy", newPositions[i].y).attr("fill", value === "1" ? "#ff4500" : "#00cc99");
+              svg.append("text").attr("x", newPositions[i].x).attr("y", newPositions[i].y + 5).attr("text-anchor", "middle").style("fill", "#fff").text(`q${i}`);
+              qubitPositions[i] = newPositions[i];
+            }
+          },
+          description: "Qubits measured, yielding encrypted message."
+        },
+        {
+          text: "Step 11: Bob Decrypts - Reverse Z",
+          action: (svg) => {
+            drawCharacters();
+            const newPositions = getQubitPositionsForStep(step);
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#ff4500").text("Reverse Z Gates").attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            for (let i = 0; i < 4; i++) {
+              const value = i % 2 === 0 ? sharedKey[i / 2] : encryptedMessage[(i - 1) / 2];
+              const qubit = svg.append("circle").attr("cx", qubitPositions[i].x).attr("cy", qubitPositions[i].y).attr("r", 20).attr("fill", value === "1" ? "#ff4500" : "#00cc99").attr("class", "float").transition().duration(1000).attr("cx", newPositions[i].x).attr("cy", newPositions[i].y).attr("fill", "#ff9900");
+              svg.append("text").attr("x", newPositions[i].x).attr("y", newPositions[i].y + 5).attr("text-anchor", "middle").style("fill", "#fff").text(`q${i}`);
+              qubitPositions[i] = newPositions[i];
+            }
+          },
+          description: "Bob reverses Z gates."
+        },
+        {
+          text: "Step 12: Bob Decrypts - Reverse Y",
+          action: (svg) => {
+            drawCharacters();
+            const newPositions = getQubitPositionsForStep(step);
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#00cc99").text("Reverse Y Gates").attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            for (let i = 0; i < 4; i++) {
+              const qubit = svg.append("circle").attr("cx", qubitPositions[i].x).attr("cy", qubitPositions[i].y).attr("r", 20).attr("fill", "#ff9900").attr("class", "float").transition().duration(1000).attr("cx", newPositions[i].x).attr("cy", newPositions[i].y).attr("fill", "#00cc99");
+              svg.append("text").attr("x", newPositions[i].x).attr("y", newPositions[i].y + 5).attr("text-anchor", "middle").style("fill", "#fff").text(`q${i}`);
+              qubitPositions[i] = newPositions[i];
+            }
+          },
+          description: "Reverse Y gates applied."
+        },
+        {
+          text: "Step 13: Bob Decrypts - Reverse P(π/4)",
+          action: (svg) => {
+            drawCharacters();
+            const newPositions = getQubitPositionsForStep(step);
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#ff6600").text("Reverse P(π/4) Gates").attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            for (let i = 0; i < 4; i++) {
+              const qubit = svg.append("circle").attr("cx", qubitPositions[i].x).attr("cy", qubitPositions[i].y).attr("r", 20).attr("fill", "#00cc99").attr("class", "float").transition().duration(1000).attr("cx", newPositions[i].x).attr("cy", newPositions[i].y).attr("fill", "#ff6600");
+              svg.append("text").attr("x", newPositions[i].x).attr("y", newPositions[i].y + 5).attr("text-anchor", "middle").style("fill", "#fff").text(`q${i}`);
+              qubitPositions[i] = newPositions[i];
+            }
+          },
+          description: "Reverse P(π/4) gates undo phase shift."
+        },
+        {
+          text: "Step 14: Bob Decrypts - Reverse CNOT and H",
+          action: (svg) => {
+            drawCharacters();
+            const newPositions = getQubitPositionsForStep(step);
+            decryptedMessage = "10"; // Reverse to encoded message
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#ff9900").text("Reverse CNOT & H Gates").attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            for (let i = 0; i < 4; i++) {
+              const value = i % 2 === 0 ? sharedKey[i / 2] : decryptedMessage[(i - 1) / 2];
+              const qubit = svg.append("circle").attr("cx", qubitPositions[i].x).attr("cy", qubitPositions[i].y).attr("r", 20).attr("fill", "#ff6600").attr("class", "float").transition().duration(1000).attr("cx", newPositions[i].x).attr("cy", newPositions[i].y).attr("fill", value === "1" ? "#ff4500" : "#00cc99");
+              svg.append("text").attr("x", newPositions[i].x).attr("y", newPositions[i].y + 5).attr("text-anchor", "middle").style("fill", "#fff").text(`q${i}`);
+              qubitPositions[i] = newPositions[i];
+            }
+          },
+          description: "Reverse CNOT and H gates recover encoded message."
+        },
+        {
+          text: "Step 15: Huffman Decoding & Delivery",
+          action: (svg) => {
+            drawCharacters();
+            const decodedBinary = huffmanDecode(decryptedMessage, huffmanDict);
+            svg.append("text").attr("x", "50%").attr("y", 80).attr("text-anchor", "middle").style("fill", "#00ff99").text(`Decrypted Binary: ${decodedBinary}`).attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+            svg.append("text").attr("x", "50%").attr("y", 110).attr("text-anchor", "middle").style("fill", "#00ffcc").text(`Message Delivered: ${message}`).attr("opacity", 0).transition().delay(1000).duration(1000).attr("opacity", 1).transition().duration(1000).attr("font-size", "24px").transition().duration(1000).attr("font-size", "20px");
+            for (let i = 0; i < 4; i++) {
+              const value = binaryMessage[i];
+              svg.append("circle").attr("cx", qubitPositions[i].x).attr("cy", qubitPositions[i].y).attr("r", 20).attr("fill", value === "1" ? "#ff4500" : "#00cc99").attr("class", "float");
+              svg.append("text").attr("x", qubitPositions[i].x).attr("y", qubitPositions[i].y + 5).attr("text-anchor", "middle").style("fill", "#fff").text(`q${i}`);
+            }
+            svg.append("circle").attr("cx", 700).attr("cy", 450).attr("r", 0).attr("fill", "none").attr("stroke", "#00ff99").attr("stroke-width", 3).transition().duration(2000).attr("r", 50).attr("opacity", 0);
+            svg.append("text").attr("x", 700).attr("y", 450).attr("text-anchor", "middle").style("fill", "#00ff99").text("Secure!").attr("opacity", 0).transition().delay(1000).duration(1000).attr("opacity", 1).attr("font-size", "30px").transition().duration(1000).attr("font-size", "20px");
+            document.getElementById("chat-result").innerHTML = `<p>Secure Message Delivered: ${message}</p>`;
+          },
+          description: "Huffman decoding recovers original message with celebratory animation."
+        }
+      ]
+    };
+
+    let steps = knowledgeableSteps;
+
+    function updateUIBasedOnMode() {
+      const welcomeText = document.getElementById("welcome-text");
+      if (userMode === "beginner") {
+        welcomeText.innerHTML = "Alice and Bob want to share a secret message! Try 'Regular Chat' (risky) or 'Quantum Chat' (safe)!";
+        steps = beginnerSteps;
+      } else {
+        welcomeText.innerHTML = "Simulate quantum cryptography with Huffman and Q6 gates! Enter a message (e.g., HELLO).";
+        steps = knowledgeableSteps;
+      }
+    }
+
+    document.getElementById("user-mode").addEventListener("change", (e) => {
+      userMode = e.target.value;
+      updateUIBasedOnMode();
+    });
+
+    updateUIBasedOnMode();
+
+    document.getElementById("normal-chat-btn").addEventListener("click", () => {
+      message = document.getElementById("message-input").value.trim() || "HELLO";
+      mode = "normal";
+      document.getElementById("result-section").classList.remove("hidden");
+      document.getElementById("conclusion-section").classList.add("hidden");
+      step = 0;
+      renderStep();
+      score += 1;
+      updateButtons();
+    });
+
+    document.getElementById("quantum-chat-btn").addEventListener("click", () => {
+      message = document.getElementById("message-input").value.trim() || "HELLO";
+      binaryMessage = stringToBinary(message).slice(0, 4); // "1100"
+      const { encoded, dict } = huffmanEncode(binaryMessage);
+      encodedMessage = encoded; // "10"
+      huffmanDict = dict;
+      sharedKey = "11";
+      encryptedMessage = "01"; // Simulated
+      decryptedMessage = "10";
+      mode = "quantum";
+      document.getElementById("result-section").classList.remove("hidden");
+      document.getElementById("conclusion-section").classList.add("hidden");
+      step = 0;
+      qubitPositions = Array(4).fill().map(() => ({ x: 150, y: 300 }));
+      renderStep();
+      score += 2;
+      updateButtons();
+    });
+
+    document.getElementById("prev-step").addEventListener("click", () => {
+      if (step > 0) {
+        step--;
+        renderStep();
+      }
+    });
+
+    document.getElementById("next-step").addEventListener("click", () => {
+      const currentSteps = steps[mode];
+      if (step < currentSteps.length - 1) {
+        step++;
+        renderStep();
+      } else {
+        document.getElementById("result-section").classList.add("hidden");
+        document.getElementById("conclusion-section").classList.remove("hidden");
+        document.getElementById("score-text").innerText == edge;//newtab/Your Score: ${score} points!`;
+        document.getElementById("conclusion-text").innerText = "Quantum encryption with Huffman and Q6 gates secured your message!";
+      }
+    });
+
+    document.getElementById("try-again-btn").addEventListener("click", () => {
+      document.getElementById("result-section").classList.add("hidden");
+      document.getElementById("conclusion-section").classList.add("hidden");
+      document.getElementById("chat-result").innerHTML = "";
+      svg.selectAll("*").remove();
+      step = 0;
+      score = 0;
+      mode = "";
+      sharedKey = "11";
+      encryptedMessage = "";
+      qubitPositions = Array(4).fill().map(() => ({ x: 150, y: 300 }));
+      updateButtons();
+    });
+
+    document.getElementById("encryption-details-btn").addEventListener("click", () => {
+      if (mode === "quantum" && step >= 14) {
+        const modal = document.getElementById("confirmation-modal");
+        document.getElementById("modal-message").textContent = message;
+        modal.style.display = "flex";
+        setTimeout(() => modal.classList.add("show"), 10);
+      }
+    });
+
+    document.getElementById("confirm-btn").addEventListener("click", () => {
+      const modal = document.getElementById("confirmation-modal");
+      modal.classList.remove("show");
+      setTimeout(() => {
+        modal.style.display = "none";
+        // Redirect to File 2 with message and key as URL parameters
+        const url = `q6fold-encryption-details.html?message=${encodeURIComponent(message)}&key=${encodeURIComponent(sharedKey)}`;
+        window.location.href = url;
+      }, 300);
+    });
+
+    document.getElementById("cancel-btn").addEventListener("click", () => {
+      const modal = document.getElementById("confirmation-modal");
+      modal.classList.remove("show");
+      setTimeout(() => (modal.style.display = "none"), 300);
+    });
+
+    function renderStep() {
+      svg.selectAll("*").remove();
+      const currentSteps = steps[mode];
+      document.getElementById("step-explanation").innerText = `${currentSteps[step].text} (Step ${step + 1}/${currentSteps.length})`;
+      document.getElementById("step-description").innerHTML = currentSteps[step].description;
+      currentSteps[step].action(svg);
+      updateButtons();
+    }
+
+    function updateButtons() {
+      const prevStep = document.getElementById("prev-step");
+      const nextStep = document.getElementById("next-step");
+      const encryptionDetailsBtn = document.getElementById("encryption-details-btn");
+      const currentSteps = steps[mode];
+      prevStep.disabled = step === 0;
+      nextStep.disabled = step >= currentSteps.length - 1;
+      encryptionDetailsBtn.disabled = !(mode === "quantum" && step >= 14);
+    }
+
+    window.onload = () => {
+      document.getElementById("prev-step").disabled = true;
+      document.getElementById("next-step").disabled = true;
+      document.getElementById("encryption-details-btn").disabled = true;
+      document.getElementById("confirmation-modal").style.display = "none";
+    };
+  </script>
+</body>
+
+</html>
